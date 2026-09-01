@@ -14,11 +14,11 @@ Then use `REPOSITORY_MAP.md` to identify the subsystem, nearby tests, and the re
 
 Agent documentation complements, rather than replaces, these existing sources:
 
-- `.github/instructions/` for scoped coding, documentation, and review rules.
-- `projectDocs/dev/` for developer environment, architecture, build, and contribution mechanics.
-- `projectDocs/testing/` for test strategy and commands.
-- `user_docs/` for end-user documentation.
-- `tests/` for executable expectations and regression coverage.
+* `.github/instructions/` for scoped coding, documentation, and review rules.
+* `projectDocs/dev/` for developer environment, architecture, build, and contribution mechanics.
+* `projectDocs/testing/` for test strategy and commands.
+* `user_docs/` for end-user documentation.
+* `tests/` for executable expectations and regression coverage.
 
 When an agent document and an authoritative technical document disagree about NVDA implementation details, prefer the authoritative technical document unless `AGENTS.md` explicitly defines a fork-specific override.
 
@@ -26,19 +26,19 @@ When an agent document and an authoritative technical document disagree about NV
 
 The agent layer will be expanded incrementally rather than created as a large parallel documentation set. Planned next documents are:
 
-- `GIT_WORKFLOW.md`: local Git and GitHub-connector publication paths.
-- `VALIDATION.md`: validation levels and truthful test/build reporting.
-- `CHANGE_IMPACT.md`: mapping from changed areas to likely tests, documentation, and risk checks.
-- `domains/MAGNIFIER.md`: the first subsystem-specific context guide and pilot for domain documentation.
+* `GIT_WORKFLOW.md`: local Git and GitHub-connector publication paths.
+* `VALIDATION.md`: validation levels and truthful test/build reporting.
+* `CHANGE_IMPACT.md`: mapping from changed areas to likely tests, documentation, and risk checks.
+* `domains/MAGNIFIER.md`: the first subsystem-specific context guide and pilot for domain documentation.
 
 Add further domain guides only when repeated agent work demonstrates that they reduce repository-discovery cost.
 
 ## Design principles
 
-- Keep root instructions short enough to be read on every task.
-- Link to existing NVDA documentation instead of copying it.
-- Prefer deterministic repository state over inferred state.
-- Prefer normal Git when it works and the GitHub connector when Git transport is unavailable.
-- Separate inspection, static validation, Windows execution, and CI results.
-- Keep agent infrastructure independent from NVDA product logic wherever practical.
-- Treat submodules and native Windows boundaries explicitly rather than as ordinary Python files.
+* Keep root instructions short enough to be read on every task.
+* Link to existing NVDA documentation instead of copying it.
+* Prefer deterministic repository state over inferred state.
+* Prefer normal Git when it works and the GitHub connector when Git transport is unavailable.
+* Separate inspection, static validation, Windows execution, and CI results.
+* Keep agent infrastructure independent from NVDA product logic wherever practical.
+* Treat submodules and native Windows boundaries explicitly rather than as ordinary Python files.
