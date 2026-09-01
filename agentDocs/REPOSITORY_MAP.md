@@ -12,19 +12,19 @@ Fork-wide workflow, repository identity, validation claims, connector behavior, 
 
 Scoped technical instructions that should be read when applicable:
 
-- `python.instructions.md` for Python and Python-window files.
-- `cpp.instructions.md` for native C/C++ code.
-- `userGuide.instructions.md` for the English user guide.
-- `review.instructions.md` for code-review expectations.
+* `python.instructions.md` for Python and Python-window files.
+* `cpp.instructions.md` for native C/C++ code.
+* `userGuide.instructions.md` for the English user guide.
+* `review.instructions.md` for code-review expectations.
 
 ### `projectDocs/`
 
 Authoritative developer and testing documentation. Important starting points include:
 
-- `projectDocs/dev/createDevEnvironment.md` for the Windows development environment and submodules.
-- `projectDocs/dev/buildingNVDA.md` for source preparation, running from source, and builds.
-- `projectDocs/dev/designOverview.md` for the architectural model.
-- `projectDocs/testing/automated.md` for lint, unit, system, translation, and license checks.
+* `projectDocs/dev/createDevEnvironment.md` for the Windows development environment and submodules.
+* `projectDocs/dev/buildingNVDA.md` for source preparation, running from source, and builds.
+* `projectDocs/dev/designOverview.md` for the architectural model.
+* `projectDocs/testing/automated.md` for lint, unit, system, translation, and license checks.
 
 ### `.github/workflows/` and `ci/`
 
@@ -124,12 +124,12 @@ Start with the files in this package and then inspect the Windows API bindings u
 
 Dedicated magnifier unit tests. The current test area includes coverage for:
 
-- focus management;
-- fullscreen magnification;
-- base magnifier behavior;
-- magnifier commands;
-- mouse hooks;
-- spotlight management.
+* focus management;
+* fullscreen magnification;
+* base magnifier behavior;
+* magnifier commands;
+* mouse hooks;
+* spotlight management.
 
 For magnifier changes, prefer targeted tests here during development and broader NVDA validation before merge when the change crosses subsystem boundaries.
 
