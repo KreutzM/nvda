@@ -67,14 +67,15 @@ Report only validation that actually ran.
 
 ## GitHub Actions storage discipline
 
-GitHub Actions storage is a limited repository resource and must be treated as such.
+GitHub Actions storage is a limited repository resource and must be managed deliberately.
 
-* Do not add repository snapshots, full Git bundles, build trees, installers, debug-symbol sets, or other large persistent artifacts to agent-specific workflows.
-* Prefer logs, job summaries, checks, and repository commits over uploaded artifacts when they are sufficient for validation.
-* If an agent-specific workflow genuinely needs an uploaded artifact, keep it narrowly scoped, avoid duplication, and use the shortest practical retention period.
-* Do not copy or republish artifacts already produced by the existing NVDA workflows solely for agent convenience.
-* Before adding or expanding artifact upload steps, consider storage cost, expected artifact size, retention, and whether the same goal can be achieved without persistent storage.
-* Snapshot or context-pack workflows are opt-in future work, not part of the default agent pipeline.
+* Useful artifacts are allowed, including snapshots, Git bundles, installers, logs, diagnostics, and context packages when they materially improve validation, reproducibility, debugging, or agent access.
+* Prefer logs, job summaries, checks, repository commits, and caches over uploaded artifacts when they provide the same value without persistent storage.
+* Keep uploaded artifacts narrowly scoped and avoid duplicating artifacts already produced by another workflow unless the duplicate has a clear operational purpose.
+* Use the shortest practical retention period for temporary artifacts. Agent-oriented snapshots, bundles, context packs, and diagnostics should normally be retained for days rather than weeks or months unless a longer period has an explicit purpose.
+* Before adding or expanding artifact upload steps, consider expected size, upload frequency, retention, duplication, and whether consumers actually need persistent download access.
+* Large or frequently generated artifacts require stronger justification and shorter retention than small diagnostic artifacts.
+* Snapshot or context-pack workflows should be opt-in or narrowly triggered when possible rather than creating large persistent artifacts for every repository event.
 
 ## Submodules
 
