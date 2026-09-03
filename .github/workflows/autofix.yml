@@ -20,6 +20,18 @@ on:
       - beta
       - rc
       - 'try-**'
+    # Agent-only maintenance is validated by Agent infrastructure. A mixed PR
+    # containing any non-ignored path still runs this full Windows lint gate.
+    paths-ignore:
+      - AGENTS.md
+      - 'agentDocs/**'
+      - 'agentTools/**'
+      - 'agentTests/**'
+      - '.github/workflows/agentInfrastructure.yml'
+      - '.github/workflows/autofix.yml'
+      - '.github/workflows/cleanupArtifacts.yml'
+      - '.github/workflows/contextSnapshot.yml'
+      - .gitignore
   workflow_dispatch:
 permissions:
   contents: write
@@ -66,7 +78,7 @@ jobs:
         done
         if ! git diff --quiet; then
           git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.email github-actions@github.com
           git add -A
           git commit -m "Auto-fix: apply prek fixes"
           # Push via an explicit refspec so this works even if checkout left us
