@@ -14,6 +14,7 @@ Then use these guides as needed:
 * `GIT_WORKFLOW.md` for local Git, connector publication, feature branches, Gitlinks, pull requests, and storage-aware Actions usage.
 * `VALIDATION.md` for V0-V3 validation levels and truthful reporting of inspection, static checks, Windows execution, and CI results.
 * `CHANGE_IMPACT.md` to map a changed area to likely tests, documentation, compatibility, security, runtime, dependency, and CI concerns.
+* `CONTEXT_SNAPSHOTS.md` for the manual current-tree ZIP/history-free bundle workflow, Gitlink manifest, verification, and short-retention semantics.
 * `domains/MAGNIFIER.md` for the built-in magnifier architecture, native boundary, test map, performance/error invariants, and design questions for docked/lens/fixed modes.
 
 ## Authoritative technical documentation
@@ -40,9 +41,11 @@ Current documentation and tooling foundation:
 * `CHANGE_IMPACT.md` for change-to-check and cross-boundary impact routing.
 * `agentTools/prepareConnectorPublish.py` and `agentTests/` for exact connector publication including submodule Gitlinks.
 * `.github/workflows/agentInfrastructure.yml` for lightweight agent-tool validation.
+* `.github/workflows/cleanupArtifacts.yml` for short-lived fork Actions artifact storage.
+* `.github/workflows/contextSnapshot.yml` and `CONTEXT_SNAPSHOTS.md` for manual current-tree snapshots without carrying full repository history.
 * `domains/MAGNIFIER.md` as the first subsystem-specific context guide.
 
-Planned next work should be driven by demonstrated need. Candidate areas include storage-aware snapshot/context workflows, artifact-retention tuning in existing fork CI, and additional domain guides for subsystems that repeatedly require expensive rediscovery.
+Further work should be driven by demonstrated need. Candidate areas include additional domain guides for subsystems that repeatedly require expensive rediscovery and targeted validation helpers where existing NVDA CI is unnecessarily broad for agent-only infrastructure.
 
 Add further domain guides only when repeated agent work demonstrates that they reduce repository-discovery cost.
 

@@ -1,0 +1,176 @@
+# A part of NonVisual Desktop Access (NVDA)
+# Copyright (C) 2026 NVDA contributors
+# This file may be used under the terms of the GNU General Public License, version 2 or later, as modified by the NVDA license.
+# For full terms and any additional permissions, see the NVDA license file: https://github.com/nvaccess/nvda/blob/master/copying.txt
+
+name: Agent context snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      format:
+        description: Snapshot format to generate
+        required: true
+        default: zip
+        type: choice
+        options:
+          - zip
+          - bundle
+          - both
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  snapshot:
+    name: Create context snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout repository tree
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 1
+        submodules: false
+
+    - name: Prepare metadata and Gitlink manifest
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p snapshot
+        SNAPSHOT_SOURCE_SHA="$(git rev-parse HEAD)"
+        SNAPSHOT_TREE_SHA="$(git rev-parse 'HEAD^{tree}')"
+        SNAPSHOT_REF_NAME="$GITHUB_REF_NAME"
+        SNAPSHOT_FORMAT="${{ inputs.format }}"
+        export SNAPSHOT_SOURCE_SHA SNAPSHOT_TREE_SHA SNAPSHOT_REF_NAME SNAPSHOT_FORMAT
+        python - <<'PY'
+        import json
+        import os
+        import subprocess
+        from datetime import datetime, timezone
+        from pathlib import Path
+
+        output = Path("snapshot")
+        sourceSha = os.environ["SNAPSHOT_SOURCE_SHA"]
+        treeSha = os.environ["SNAPSHOT_TREE_SHA"]
+
+        rawTree = subprocess.check_output(["git", "ls-tree", "-r", "-z", "HEAD"])
+        gitlinks = []
+        for record in rawTree.split(b"\0"):
+            if not record:
+                continue
+            header, pathBytes = record.split(b"\t", 1)
+            mode, objectType, sha = header.decode("ascii").split(" ")
+            if mode == "160000" and objectType == "commit":
+                gitlinks.append(
+                    {
+                        "path": os.fsdecode(pathBytes),
+                        "sha": sha,
+                        "mode": mode,
+                        "type": objectType,
+                    },
+                )
+
+        metadata = {
+            "repository": os.environ["GITHUB_REPOSITORY"],
+            "sourceSha": sourceSha,
+            "treeSha": treeSha,
+            "ref": os.environ["GITHUB_REF"],
+            "refName": os.environ["SNAPSHOT_REF_NAME"],
+            "requestedFormat": os.environ["SNAPSHOT_FORMAT"],
+            "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "workflowRunId": os.environ["GITHUB_RUN_ID"],
+            "workflowRunAttempt": os.environ["GITHUB_RUN_ATTEMPT"],
+            "semantics": {
+                "zip": "git archive of the exact parent-repository tree; submodule contents are not embedded",
+                "bundle": "parentless synthetic commit referencing the exact source tree; repository history and submodule repositories are not embedded",
+            },
+            "gitlinkCount": len(gitlinks),
+        }
+        (output / "metadata.json").write_text(
+            json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        (output / "gitlinks.json").write_text(
+            json.dumps(gitlinks, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        PY
+
+    - name: Create current-tree ZIP
+      if: ${{ inputs.format == 'zip' || inputs.format == 'both' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        git archive \
+          --format=zip \
+          --prefix=nvda/ \
+          --output=snapshot/nvda-current-tree.zip \
+          HEAD
+        unzip -tq snapshot/nvda-current-tree.zip
+
+    - name: Create history-free Git bundle
+      if: ${{ inputs.format == 'bundle' || inputs.format == 'both' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        treeSha="$(git rev-parse 'HEAD^{tree}')"
+        sourceSha="$(git rev-parse HEAD)"
+        syntheticRef="refs/heads/__agent_context_snapshot"
+        syntheticCommit="$(
+          GIT_AUTHOR_NAME='NVDA context snapshot' \
+          GIT_AUTHOR_EMAIL='snapshot@example.invalid' \
+          GIT_COMMITTER_NAME='NVDA context snapshot' \
+          GIT_COMMITTER_EMAIL='snapshot@example.invalid' \
+          git commit-tree "$treeSha" -m "Context snapshot of $sourceSha"
+        )"
+        git update-ref "$syntheticRef" "$syntheticCommit"
+        trap 'git update-ref -d "$syntheticRef"' EXIT
+        if [[ "$(git rev-parse "${syntheticCommit}^{tree}")" != "$treeSha" ]]; then
+          echo "Synthetic snapshot commit does not reference the expected source tree" >&2
+          exit 1
+        fi
+        git bundle create snapshot/nvda-current-tree.bundle "$syntheticRef"
+        git bundle verify snapshot/nvda-current-tree.bundle
+
+    - name: Write checksums and summary
+      shell: bash
+      run: |
+        set -euo pipefail
+        python - <<'PY'
+        import hashlib
+        from pathlib import Path
+
+        output = Path("snapshot")
+        lines = []
+        for path in sorted(output.iterdir(), key=lambda item: item.name):
+            if not path.is_file() or path.name == "SHA256SUMS":
+                continue
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            lines.append(f"{digest}  {path.name}")
+        (output / "SHA256SUMS").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        PY
+        {
+          echo "### Agent context snapshot"
+          echo ""
+          echo "* Source commit: \`$(git rev-parse HEAD)\`"
+          echo "* Source tree: \`$(git rev-parse 'HEAD^{tree}')\`"
+          echo "* Format: \`${{ inputs.format }}\`"
+          echo "* Retention: 3 days"
+          echo "* Submodule contents are not embedded; exact Gitlink SHAs are recorded in \`gitlinks.json\`."
+          echo ""
+          du -h snapshot/* | sort -h
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload context snapshot
+      uses: actions/upload-artifact@v7
+      with:
+        name: NVDA context snapshot (${{ inputs.format }})
+        path: snapshot
+        if-no-files-found: error
+        retention-days: 3
+        compression-level: 0
