@@ -41,6 +41,7 @@ Report only validation that actually ran.
 * GitHub Actions results are CI validation, not local validation.
 * Do not claim successful NVDA runtime behavior without execution on a suitable Windows environment.
 * When a check cannot be run, state that explicitly and identify the check delegated to CI or a Windows developer environment.
+* Use `agentDocs/VALIDATION.md` for V0-V3 validation levels and reporting semantics.
 
 ## Repository acquisition and GitHub publishing
 
@@ -53,6 +54,7 @@ Report only validation that actually ran.
 * Direct connector file operations are preferred for ordinary UTF-8 text changes. Several focused commits are acceptable because feature pull requests may be squash-merged.
 * Do not use low-level Git-data blob/tree/commit publication merely to reduce commit count. Reserve it for cases that materially require exact bytes, file modes, Gitlinks/submodule pointers, binary data, or atomic publication.
 * After connector writes, compare the feature branch with `master` and verify that it is not behind and that only intended paths changed.
+* Read `agentDocs/GIT_WORKFLOW.md` before connector publication or nontrivial branch manipulation.
 
 ## Development workflow
 
@@ -94,6 +96,8 @@ Useful starting points include:
 
 * `agentDocs/README.md` for agent-oriented navigation.
 * `agentDocs/REPOSITORY_MAP.md` for a compact subsystem map.
+* `agentDocs/GIT_WORKFLOW.md` for Git and connector publication.
+* `agentDocs/VALIDATION.md` for validation levels and truthful reporting.
 * `projectDocs/dev/createDevEnvironment.md` for environment setup.
 * `projectDocs/dev/buildingNVDA.md` for builds and running from source.
 * `projectDocs/testing/automated.md` for automated validation.
