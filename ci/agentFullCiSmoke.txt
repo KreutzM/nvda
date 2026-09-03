@@ -1,0 +1,2 @@
+Temporary CI sentinel for validating the agent test Pyright fix.
+This file must be removed before merge.
