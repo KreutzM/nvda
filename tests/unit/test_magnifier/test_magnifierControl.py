@@ -8,6 +8,7 @@ from ctypes.wintypes import HWND, RECT
 from unittest.mock import patch
 
 from _magnifier.magnifierControl import MagnifierControl
+from _magnifier.utils.types import Size
 from winBindings import magnification
 
 
@@ -15,6 +16,7 @@ class TestMagnifierControl(unittest.TestCase):
 	def setUp(self) -> None:
 		self.parentHwnd = HWND(100)
 		self.childHwnd = HWND(200)
+		self.size = Size(320, 240)
 		self.user32Patcher = patch("_magnifier.magnifierControl.user32")
 		self.magnificationPatcher = patch("_magnifier.magnifierControl.magnification")
 		self.mockUser32 = self.user32Patcher.start()
@@ -30,7 +32,7 @@ class TestMagnifierControl(unittest.TestCase):
 		self.mockMagnification.MAGTRANSFORM = magnification.MAGTRANSFORM
 
 	def testCreateConfiguresChildAndExcludesHost(self) -> None:
-		control = MagnifierControl(self.parentHwnd, 320, 240)
+		control = MagnifierControl(self.parentHwnd, self.size)
 		control.create()
 
 		self.assertEqual(control.hwnd, self.childHwnd)
@@ -41,8 +43,8 @@ class TestMagnifierControl(unittest.TestCase):
 			0x40000000 | 0x10000000 | magnification.MS_SHOWMAGNIFIEDCURSOR,
 			0,
 			0,
-			320,
-			240,
+			self.size.width,
+			self.size.height,
 			self.parentHwnd,
 			None,
 			None,
@@ -54,14 +56,14 @@ class TestMagnifierControl(unittest.TestCase):
 		self.assertEqual(filterArgs[3][0], self.parentHwnd.value)
 
 	def testCreateWithoutCursorOmitsCursorStyle(self) -> None:
-		control = MagnifierControl(self.parentHwnd, 320, 240, showCursor=False)
+		control = MagnifierControl(self.parentHwnd, self.size, showCursor=False)
 		control.create()
 
 		style = self.mockUser32.CreateWindowEx.call_args.args[3]
 		self.assertEqual(style, 0x40000000 | 0x10000000)
 
 	def testCreateIsIdempotent(self) -> None:
-		control = MagnifierControl(self.parentHwnd, 320, 240)
+		control = MagnifierControl(self.parentHwnd, self.size)
 		control.create()
 		control.create()
 
@@ -70,7 +72,7 @@ class TestMagnifierControl(unittest.TestCase):
 
 	def testCreateCleansUpWhenFilterSetupFails(self) -> None:
 		self.mockMagnification.MagSetWindowFilterList.side_effect = OSError("filter failed")
-		control = MagnifierControl(self.parentHwnd, 320, 240)
+		control = MagnifierControl(self.parentHwnd, self.size)
 
 		with self.assertRaisesRegex(OSError, "filter failed"):
 			control.create()
@@ -80,7 +82,7 @@ class TestMagnifierControl(unittest.TestCase):
 			_ = control.hwnd
 
 	def testDestroyIsIdempotent(self) -> None:
-		control = MagnifierControl(self.parentHwnd, 320, 240)
+		control = MagnifierControl(self.parentHwnd, self.size)
 		control.create()
 		control.destroy()
 		control.destroy()
@@ -90,7 +92,7 @@ class TestMagnifierControl(unittest.TestCase):
 			_ = control.hwnd
 
 	def testSetZoomFactorBuildsDiagonalTransform(self) -> None:
-		control = MagnifierControl(self.parentHwnd, 320, 240)
+		control = MagnifierControl(self.parentHwnd, self.size)
 		control.create()
 		control.setZoomFactor(2.5)
 
@@ -103,7 +105,7 @@ class TestMagnifierControl(unittest.TestCase):
 		self.assertEqual(transform.v[0][1], 0.0)
 
 	def testSetSourceForwardsDesktopRect(self) -> None:
-		control = MagnifierControl(self.parentHwnd, 320, 240)
+		control = MagnifierControl(self.parentHwnd, self.size)
 		control.create()
 		rect = RECT(-100, 25, 220, 265)
 
@@ -113,9 +115,9 @@ class TestMagnifierControl(unittest.TestCase):
 
 	def testRejectsInvalidDimensionsAndZoom(self) -> None:
 		with self.assertRaisesRegex(ValueError, "dimensions must be positive"):
-			MagnifierControl(self.parentHwnd, 0, 240)
+			MagnifierControl(self.parentHwnd, Size(0, 240))
 
-		control = MagnifierControl(self.parentHwnd, 320, 240)
+		control = MagnifierControl(self.parentHwnd, self.size)
 		control.create()
 		with self.assertRaisesRegex(ValueError, "zoom factor must be positive"):
 			control.setZoomFactor(0)
