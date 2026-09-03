@@ -5,12 +5,39 @@
 
 """Functions exported by magnification.dll, and supporting data structures and enumerations."""
 
-from ctypes import POINTER, WINFUNCTYPE, Structure, WinError, c_float, c_int, windll  # noqa: I001
-from ctypes.wintypes import BOOL, LPRECT
+from ctypes import POINTER, WINFUNCTYPE, Structure, WinError, c_float, c_int, windll
+from ctypes.wintypes import BOOL, DWORD, HWND, LPRECT, RECT
 from _ctypes import CFuncPtr
 from typing import Any
 
+
 dll = windll.Magnification
+
+# Magnifier control class name from Magnification.h.
+WC_MAGNIFIER = "Magnifier"
+
+# Magnifier control window styles from Magnification.h.
+MS_SHOWMAGNIFIEDCURSOR = 0x0001
+MS_CLIPAROUNDCURSOR = 0x0002
+MS_INVERTCOLORS = 0x0004
+
+# Magnifier control filter modes from Magnification.h.
+MW_FILTERMODE_EXCLUDE = 0
+MW_FILTERMODE_INCLUDE = 1
+
+
+class MAGTRANSFORM(Structure):
+	"""
+	Describes a transformation matrix that a magnifier control uses to magnify screen content.
+
+	.. seealso::
+		https://learn.microsoft.com/en-us/windows/win32/api/magnification/ns-magnification-magtransform
+	"""
+
+	_fields_ = (("v", c_float * 3 * 3),)
+
+
+PMAGTRANSFORM = POINTER(MAGTRANSFORM)
 
 
 class MAGCOLOREFFECT(Structure):
@@ -110,3 +137,54 @@ Sets the mapping between magnified coordinates and screen coordinates for pen an
 	https://learn.microsoft.com/en-us/windows/win32/api/magnification/nf-magnification-magsetinputtransform
 """
 MagSetInputTransform.errcheck = _errCheck
+
+MagSetWindowSource = WINFUNCTYPE(BOOL, HWND, RECT)(
+	("MagSetWindowSource", dll),
+	((1, "hwnd"), (1, "rect")),
+)
+"""
+Sets the source rectangle for a magnifier control. The rectangle uses desktop coordinates.
+
+.. seealso::
+	https://learn.microsoft.com/en-us/windows/win32/api/magnification/nf-magnification-magsetwindowsource
+"""
+MagSetWindowSource.errcheck = _errCheck
+
+MagSetWindowTransform = WINFUNCTYPE(BOOL, HWND, PMAGTRANSFORM)(
+	("MagSetWindowTransform", dll),
+	((1, "hwnd"), (1, "pTransform")),
+)
+"""
+Sets the transformation matrix for a magnifier control.
+
+.. seealso::
+	https://learn.microsoft.com/en-us/windows/win32/api/magnification/nf-magnification-magsetwindowtransform
+"""
+MagSetWindowTransform.errcheck = _errCheck
+
+MagSetWindowFilterList = WINFUNCTYPE(BOOL, HWND, DWORD, c_int, POINTER(HWND))(
+	("MagSetWindowFilterList", dll),
+	((1, "hwnd"), (1, "dwFilterMode"), (1, "count"), (1, "pHWND")),
+)
+"""
+Sets the list of windows included in or excluded from a magnifier control.
+
+``MW_FILTERMODE_INCLUDE`` is not supported on Windows 7 or newer; new magnifier-control
+implementations should normally use ``MW_FILTERMODE_EXCLUDE`` when a filter list is needed.
+
+.. seealso::
+	https://learn.microsoft.com/en-us/windows/win32/api/magnification/nf-magnification-magsetwindowfilterlist
+"""
+MagSetWindowFilterList.errcheck = _errCheck
+
+MagSetColorEffect = WINFUNCTYPE(BOOL, HWND, PMAGCOLOREFFECT)(
+	("MagSetColorEffect", dll),
+	((1, "hwnd"), (1, "pEffect")),
+)
+"""
+Sets the color transformation matrix for a magnifier control.
+
+.. seealso::
+	https://learn.microsoft.com/en-us/windows/win32/api/magnification/nf-magnification-magsetcoloreffect
+"""
+MagSetColorEffect.errcheck = _errCheck
