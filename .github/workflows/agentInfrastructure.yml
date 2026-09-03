@@ -18,6 +18,7 @@ on:
       - '.github/workflows/autofix.yml'
       - '.github/workflows/cleanupArtifacts.yml'
       - '.github/workflows/contextSnapshot.yml'
+      - '.github/workflows/testAndPublish.yml'
       - .gitignore
   pull_request:
     paths:
@@ -29,6 +30,7 @@ on:
       - '.github/workflows/autofix.yml'
       - '.github/workflows/cleanupArtifacts.yml'
       - '.github/workflows/contextSnapshot.yml'
+      - '.github/workflows/testAndPublish.yml'
       - .gitignore
   workflow_dispatch:
 
@@ -68,8 +70,10 @@ jobs:
         workflowFiles=()
         for file in \
           .github/workflows/agentInfrastructure.yml \
+          .github/workflows/autofix.yml \
           .github/workflows/cleanupArtifacts.yml \
-          .github/workflows/contextSnapshot.yml; do
+          .github/workflows/contextSnapshot.yml \
+          .github/workflows/testAndPublish.yml; do
           if [[ -f "$file" ]]; then
             workflowFiles+=("$file")
           fi

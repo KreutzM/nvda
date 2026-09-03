@@ -9,6 +9,16 @@ on:
       - 'try-**'
     tags:
       - 'release-**'
+    paths-ignore:
+      - AGENTS.md
+      - 'agentDocs/**'
+      - 'agentTools/**'
+      - 'agentTests/**'
+      - '.github/workflows/agentInfrastructure.yml'
+      - '.github/workflows/autofix.yml'
+      - '.github/workflows/cleanupArtifacts.yml'
+      - '.github/workflows/contextSnapshot.yml'
+      - .gitignore
 
   pull_request:
     branches:
@@ -16,6 +26,16 @@ on:
       - beta
       - rc
       - 'try-**'
+    paths-ignore:
+      - AGENTS.md
+      - 'agentDocs/**'
+      - 'agentTools/**'
+      - 'agentTests/**'
+      - '.github/workflows/agentInfrastructure.yml'
+      - '.github/workflows/autofix.yml'
+      - '.github/workflows/cleanupArtifacts.yml'
+      - '.github/workflows/contextSnapshot.yml'
+      - .gitignore
 
   workflow_dispatch:
 
