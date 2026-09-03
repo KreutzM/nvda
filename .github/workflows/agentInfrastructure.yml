@@ -16,6 +16,7 @@ on:
       - 'agentTests/**'
       - '.github/workflows/agentInfrastructure.yml'
       - '.github/workflows/autofix.yml'
+      - '.github/workflows/cleanupArtifacts.yml'
       - .gitignore
   pull_request:
     paths:
@@ -25,6 +26,7 @@ on:
       - 'agentTests/**'
       - '.github/workflows/agentInfrastructure.yml'
       - '.github/workflows/autofix.yml'
+      - '.github/workflows/cleanupArtifacts.yml'
       - .gitignore
   workflow_dispatch:
 

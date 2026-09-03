@@ -1,0 +1,79 @@
+# A part of NonVisual Desktop Access (NVDA)
+# Copyright (C) 2026 NVDA contributors
+# This file may be used under the terms of the GNU General Public License, version 2 or later, as modified by the NVDA license.
+# For full terms and any additional permissions, see the NVDA license file: https://github.com/nvaccess/nvda/blob/master/copying.txt
+
+name: Clean up Actions artifacts
+
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: cleanup-actions-artifacts
+  cancel-in-progress: true
+
+env:
+  # Override with the repository variable ARTIFACT_RETENTION_DAYS when a
+  # temporarily longer or shorter fork-wide retention window is useful.
+  RETENTION_DAYS: ${{ vars.ARTIFACT_RETENTION_DAYS || '3' }}
+
+jobs:
+  cleanup:
+    name: Delete old workflow artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - name: Delete artifacts older than retention window
+      uses: actions/github-script@v8
+      env:
+        REPOSITORY: ${{ github.repository }}
+      with:
+        script: |
+          const retentionDays = Number(process.env.RETENTION_DAYS);
+          if (!Number.isFinite(retentionDays) || retentionDays < 1 || retentionDays > 30) {
+            core.setFailed(`RETENTION_DAYS must be between 1 and 30; got ${process.env.RETENTION_DAYS}`);
+            return;
+          }
+
+          const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+          const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100,
+          });
+
+          const candidates = artifacts.filter((artifact) => {
+            if (artifact.expired) {
+              return false;
+            }
+            const createdAt = Date.parse(artifact.created_at);
+            return Number.isFinite(createdAt) && createdAt < cutoff;
+          });
+
+          let deletedBytes = 0;
+          for (const artifact of candidates) {
+            await github.rest.actions.deleteArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: artifact.id,
+            });
+            deletedBytes += artifact.size_in_bytes || 0;
+            core.info(`Deleted ${artifact.name} (${artifact.id}), created ${artifact.created_at}`);
+          }
+
+          const deletedMiB = deletedBytes / (1024 * 1024);
+          await core.summary
+            .addHeading('Actions artifact cleanup')
+            .addTable([
+              [{data: 'Retention', header: true}, `${retentionDays} days`],
+              [{data: 'Artifacts scanned', header: true}, String(artifacts.length)],
+              [{data: 'Artifacts deleted', header: true}, String(candidates.length)],
+              [{data: 'Storage deleted', header: true}, `${deletedMiB.toFixed(1)} MiB`],
+            ])
+            .write();
