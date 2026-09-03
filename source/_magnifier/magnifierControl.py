@@ -8,6 +8,7 @@
 from ctypes import WinError
 from ctypes.wintypes import HWND, RECT
 
+from _magnifier.utils.types import Size
 from winBindings import magnification, user32
 
 
@@ -26,15 +27,14 @@ class MagnifierControl:
 	child magnifier-control HWND and its per-control state.
 	"""
 
-	def __init__(self, parentHwnd: HWND, width: int, height: int, *, showCursor: bool = True) -> None:
-		if width <= 0 or height <= 0:
+	def __init__(self, parentHwnd: HWND, size: Size, *, showCursor: bool = True) -> None:
+		if size.width <= 0 or size.height <= 0:
 			raise ValueError("magnifier control dimensions must be positive")
 		if not parentHwnd:
 			raise ValueError("magnifier control requires a valid parent HWND")
 
 		self._parentHwnd = parentHwnd
-		self._width = width
-		self._height = height
+		self._size = size
 		self._showCursor = showCursor
 		self._hwnd: HWND | None = None
 
@@ -61,8 +61,8 @@ class MagnifierControl:
 			style,
 			0,
 			0,
-			self._width,
-			self._height,
+			self._size.width,
+			self._size.height,
 			self._parentHwnd,
 			None,
 			None,
