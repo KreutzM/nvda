@@ -63,22 +63,32 @@ jobs:
         activate-environment: "false"
     - name: Install test dependency
       run: python -m pip install --disable-pip-version-check pytest
-    - name: Validate agent workflows
+    - name: Validate agent-owned workflows
       shell: bash
       run: |
         set -euo pipefail
         workflowFiles=()
         for file in \
           .github/workflows/agentInfrastructure.yml \
-          .github/workflows/autofix.yml \
           .github/workflows/cleanupArtifacts.yml \
-          .github/workflows/contextSnapshot.yml \
-          .github/workflows/testAndPublish.yml; do
+          .github/workflows/contextSnapshot.yml; do
           if [[ -f "$file" ]]; then
             workflowFiles+=("$file")
           fi
         done
         uvx prek run actionlint --files "${workflowFiles[@]}"
+    - name: Validate inherited workflows
+      shell: bash
+      env:
+        # Existing NVDA workflows contain known ShellCheck findings unrelated to
+        # agent infrastructure. Keep actionlint's Actions/YAML/expression checks
+        # while suppressing only the currently known legacy ShellCheck codes.
+        SHELLCHECK_OPTS: --exclude=SC1001,SC1012,SC2012,SC2034,SC2046,SC2086,SC2129
+      run: |
+        set -euo pipefail
+        uvx prek run actionlint --files \
+          .github/workflows/autofix.yml \
+          .github/workflows/testAndPublish.yml
     - name: Compile agent tools
       run: python -m compileall -q agentTools
     - name: Run agent tool tests
