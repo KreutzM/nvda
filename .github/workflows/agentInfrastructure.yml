@@ -89,6 +89,14 @@ jobs:
         uvx prek run actionlint --files \
           .github/workflows/autofix.yml \
           .github/workflows/testAndPublish.yml
+    - name: Lint agent Python
+      run: |
+        uvx prek run ruff --files \
+          agentTools/prepareConnectorPublish.py \
+          agentTests/test_prepareConnectorPublish.py
+        uvx prek run ruff-format --files \
+          agentTools/prepareConnectorPublish.py \
+          agentTests/test_prepareConnectorPublish.py
     - name: Compile agent tools
       run: python -m compileall -q agentTools
     - name: Run agent tool tests
