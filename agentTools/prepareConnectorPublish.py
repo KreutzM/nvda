@@ -20,9 +20,9 @@ import base64
 import json
 import subprocess
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from collections.abc import Iterable
 
 
 class PublishPlanError(RuntimeError):

@@ -13,7 +13,6 @@ import sys
 import unittest
 from pathlib import Path
 
-
 _SCRIPT = Path(__file__).parents[1] / "agentTools" / "prepareConnectorPublish.py"
 _SPEC = importlib.util.spec_from_file_location("prepareConnectorPublish", _SCRIPT)
 assert _SPEC is not None and _SPEC.loader is not None
