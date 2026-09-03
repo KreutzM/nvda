@@ -20,6 +20,18 @@ on:
       - beta
       - rc
       - 'try-**'
+    # Agent-only maintenance is validated by Agent infrastructure. A mixed PR
+    # containing any non-ignored path still runs this full Windows lint gate.
+    paths-ignore:
+      - AGENTS.md
+      - 'agentDocs/**'
+      - 'agentTools/**'
+      - 'agentTests/**'
+      - '.github/workflows/agentInfrastructure.yml'
+      - '.github/workflows/autofix.yml'
+      - '.github/workflows/cleanupArtifacts.yml'
+      - '.github/workflows/contextSnapshot.yml'
+      - .gitignore
   workflow_dispatch:
 permissions:
   contents: write

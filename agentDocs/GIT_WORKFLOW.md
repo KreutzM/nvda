@@ -26,9 +26,28 @@ master
         +-- draft pull request
 ```
 
-When roadmap work is intentionally split into dependent pull requests, a temporary stacked branch may be based on the preceding feature branch. The pull request should then target that preceding branch so the diff contains only the new layer. Rebase or retarget the stacked pull request after its dependency is merged.
+When roadmap work is intentionally split into dependent pull requests, a temporary stacked branch may be based on the preceding feature branch. The pull request should then target that preceding branch so the diff contains only the new layer. Rebase, recreate, or retarget the stacked pull request after its dependency is merged.
 
 Do not use NVDA's `try-*` branch naming for ordinary agent work because those names have repository-specific CI/release semantics.
+
+### Normalize stacked branches after a squash merge
+
+A squash merge changes commit ancestry even when the resulting `master` tree contains exactly the files expected from the parent pull request. A child branch that still descends from the pre-squash parent commits does not automatically descend from the new squash commit.
+
+Do not assume that simply retargeting such a child pull request to `master` will preserve its layer-only diff. GitHub can show the already-merged parent changes again because the merge base is still the old stack ancestry.
+
+After a stacked dependency is squash-merged:
+
+1. Read the new target branch commit SHA.
+2. Determine the exact desired child-layer tree and verify that it contains the merged parent state plus only the child's intended changes.
+3. Rebase, recreate, or deliberately reparent the child branch onto the new target commit.
+4. Compare the rewritten child branch with its new intended base.
+5. Require `behind_by == 0` and only the child's expected paths before merging it.
+6. Repeat from the bottom of a longer stack so every child directly follows its newly normalized parent.
+
+For connector-only work, when the child tree has already been independently verified, an exact Git-data normalization may create a new commit whose tree is that verified child tree and whose parent is the current intended target commit, then force-update the feature branch deliberately. Use this only for planned stack normalization; do not rewrite branches casually.
+
+Matching file trees are not a substitute for correct ancestry. Verify both the tree/diff and the commit relationship after every stack rewrite.
 
 ## 1. Select the publication path
 
@@ -75,11 +94,13 @@ git switch -c agent/<description>
 
 Before changing files, confirm the working tree state with `git status --short`.
 
+For intentional stacked work, replace `master` in the branch-creation step with the verified current parent branch that will be the pull request's intended base.
+
 ### Connector-only path
 
 When normal Git transport is unavailable:
 
-1. Read repository metadata or the target branch ref.
+1. Read repository metadata or the intended target branch ref.
 2. Record the exact current target commit SHA.
 3. Create `agent/<description>` from that exact ref or SHA.
 4. Fetch every existing file that will be replaced or deleted before writing it.
@@ -112,11 +133,11 @@ Direct connector operations are the preferred fallback for Markdown, Python, YAM
 
 Typical sequence:
 
-1. Create the feature branch from the current target.
+1. Create the feature branch from the current intended target.
 2. Fetch files being modified and retain their current blob SHAs.
 3. Apply focused creates, updates, or deletions.
 4. For repeated updates to one file, use the SHA returned by the preceding write.
-5. Compare the finished feature branch with its target.
+5. Compare the finished feature branch with its intended target.
 6. Open or update a draft pull request only after the diff is verified.
 
 Each contents operation may create a separate commit. That is acceptable for a feature branch intended for squash merge.
@@ -175,8 +196,10 @@ For a local branch, useful repository-state checks include:
 git status --short
 git diff --check
 git diff --stat
-git diff --submodule=log master...HEAD
+git diff --submodule=log <intended-base>...HEAD
 ```
+
+For ordinary work `<intended-base>` is `master`. For an intentional stacked pull request it is the preceding feature branch until that dependency is merged and the child is normalized onto its new base.
 
 Use the existing NVDA validation commands rather than inventing replacements. `projectDocs/testing/automated.md` is authoritative for current lint, translation, unit-test, system-test, and license-check mechanics.
 
@@ -209,6 +232,8 @@ The pull-request description should state:
 * any unvalidated hardware, application, or runtime behavior;
 * whether the PR is stacked on another agent PR.
 
+After a stacked dependency is squash-merged, normalize the child branch before retargeting/merging it and re-run the complete intended-base comparison. Do not infer that the child remains layer-clean from its previous diff.
+
 Do not merge unless the user explicitly authorizes the merge.
 
 ## 9. GitHub Actions artifacts and storage
@@ -238,5 +263,6 @@ Do not download large artifacts merely to prove that they exist; inspect metadat
 * Treating a set of downloaded files as a verified local checkout.
 * Publishing a Gitlink as ordinary text or blob content.
 * Accepting a blob, tree, base-tree, or Gitlink mismatch in an exact-publication path.
+* Retargeting a post-squash stacked child without re-verifying its ancestry and layer-only diff.
 * Keeping large or frequently generated Actions artifacts for long retention without a concrete need.
 * Reporting CI as local execution or inspection as runtime validation.

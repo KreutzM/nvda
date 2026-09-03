@@ -49,11 +49,11 @@ Report only validation that actually ran.
 * Use `git clone --recursive https://github.com/KreutzM/nvda.git` for a new local checkout.
 * Probe an unavailable transport only once per task; after a capability is known to be unavailable, use the working path instead of retrying it repeatedly.
 * When normal Git push is unavailable, use the GitHub connector for repository reads, branches, ordinary UTF-8 text edits, comparisons, pull requests, and CI inspection.
-* Create a feature branch from the current `master` before making changes through the connector.
+* Create a feature branch from the current intended pull-request base before making changes through the connector. For ordinary work this is `master`; an intentionally stacked pull request may use the preceding agent branch.
 * Read an existing file before replacing or deleting it and use its current blob SHA for connector writes.
 * Direct connector file operations are preferred for ordinary UTF-8 text changes. Several focused commits are acceptable because feature pull requests may be squash-merged.
 * Do not use low-level Git-data blob/tree/commit publication merely to reduce commit count. Reserve it for cases that materially require exact bytes, file modes, Gitlinks/submodule pointers, binary data, or atomic publication.
-* After connector writes, compare the feature branch with `master` and verify that it is not behind and that only intended paths changed.
+* After connector writes, compare the feature branch with its intended pull-request base and verify that it is not behind and that only intended paths changed. For ordinary work the base is `master`; stacked work may deliberately use a preceding agent branch.
 * Read `agentDocs/GIT_WORKFLOW.md` before connector publication or nontrivial branch manipulation.
 
 ## Development workflow
@@ -111,7 +111,7 @@ Useful starting points include:
 
 * Pull requests normally target `KreutzM/nvda:master`.
 * Agent-created branches may be published as draft pull requests once they form a coherent reviewable change.
-* Before opening a pull request, inspect the complete branch diff against `master` and verify that no accidental files are included.
+* Before opening a pull request, inspect the complete branch diff against the intended pull-request base and verify that no accidental files are included. For an ordinary pull request this base is `master`; for an intentional stack it is the preceding feature branch.
 * Pull-request descriptions must distinguish checks actually executed from checks expected to run in CI.
 * Prefer squash merge for connector-generated multi-commit branches unless preserving individual commits has a specific value.
 * Do not merge unless the user explicitly requests or authorizes the merge.
