@@ -8,10 +8,12 @@ name: Autofix or fail
 on:
   push:
     # Never auto-fix the protected branches; PRs to them use pull_request below.
+    # Agent branches use the lightweight agent infrastructure workflow instead.
     branches-ignore:
       - master
       - beta
       - rc
+      - 'agent/**'
   pull_request:
     branches:
       - master
@@ -30,7 +32,7 @@ jobs:
   autofix:
     name: Auto-fix and lint gate
     # On the base repo the pull_request run is the gate; skip its push run on non-Fork pushes to
-    # avoid a duplicate. Fork pushes still run for autofix.
+    # avoid a duplicate. Fork pushes still run for autofix unless excluded above.
     if: github.event_name != 'push' || github.repository != 'nvaccess/nvda'
     runs-on: windows-2025-vs2026
     steps:
