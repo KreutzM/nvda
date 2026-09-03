@@ -10,9 +10,8 @@ import importlib.util
 import json
 import subprocess
 import sys
+import unittest
 from pathlib import Path
-
-import pytest
 
 
 _SCRIPT = Path(__file__).parents[1] / "agentTools" / "prepareConnectorPublish.py"
@@ -157,14 +156,14 @@ def testPlanRejectsDirtyWorktree(tmp_path: Path) -> None:
 	repo, base, head = _makeBlobRepo(tmp_path)
 	(repo / "uncommitted.txt").write_text("dirty", encoding="utf-8")
 
-	with pytest.raises(_MODULE.PublishPlanError, match="not clean"):
+	with unittest.TestCase().assertRaisesRegex(_MODULE.PublishPlanError, "not clean"):
 		_buildPlan(repo, base, head, tmp_path / "plan")
 
 
 def testPlanRejectsRemoteTreeMismatch(tmp_path: Path) -> None:
 	repo, base, head = _makeBlobRepo(tmp_path)
 
-	with pytest.raises(_MODULE.PublishPlanError, match="does not match"):
+	with unittest.TestCase().assertRaisesRegex(_MODULE.PublishPlanError, "does not match"):
 		_MODULE.buildPublishPlan(
 			repo=repo,
 			baseRef=base,
