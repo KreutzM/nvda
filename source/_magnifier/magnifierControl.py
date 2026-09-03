@@ -80,7 +80,7 @@ class MagnifierControl:
 				1,
 				excludedWindows,
 			)
-		except Exception:
+		except OSError:
 			# The control must not survive a partially failed setup because that could
 			# recursively magnify its own host or leave an unmanaged native window.
 			user32.DestroyWindow(hwnd)
